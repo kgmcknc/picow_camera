@@ -53,4 +53,4 @@ class i2c_class:
         for register in reg_list:
             self.reg_write(register[0], register[1])
             print(register[0], register[1])
-            time.sleep(0.5)
+            time.sleep(0.2)

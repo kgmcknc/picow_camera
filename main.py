@@ -20,10 +20,10 @@ def main():
     my_cam.i2c_freq = hm01b0.hm01b0_freq
     my_cam.scl_pin = machine.Pin(5)
     my_cam.sda_pin = machine.Pin(4)
-    my_cam.data_pin = machine.Pin(6, machine.Pin.IN)
-    my_cam.pix_clk_pin = machine.Pin(14, machine.Pin.OUT)
-    my_cam.hsync_pin = machine.Pin(15, machine.Pin.IN)
-    my_cam.vsync_pin = machine.Pin(16, machine.Pin.IN)
+    my_cam.vsync_pin = machine.Pin(18, machine.Pin.IN)
+    my_cam.hsync_pin = machine.Pin(19, machine.Pin.IN)
+    my_cam.pix_clk_pin = machine.Pin(20, machine.Pin.OUT)
+    my_cam.data_pin = machine.Pin(21, machine.Pin.IN)
 
     my_cam.pix_clk_freq = hm01b0.hm01b0_pix_clk_freq
     time.sleep(1)
@@ -54,18 +54,16 @@ def main():
     time.sleep(1)
 
     print("creating pio class")
-    pio = hm01b0.cam_pio_class(0, 60000000, my_cam.data_pin)
+    pio = hm01b0.cam_pio_class(0, 60000000, my_cam.vsync_pin, my_cam.hsync_pin)
     time.sleep(1)
 
-    print("starting pio")
-    pio.start()
+    print("starting pio for one frame")
+    data = pio.capture_frame()
 
-    print("capturing frames for 5 seconds")
-    time.sleep(5)
+    # print("getting frame data")
+    # data = pio.get_frame_data()
+    print(data)
 
-    print("stopping pio")
-    pio.stop()
-    
     while(1):
         #hsync = my_cam.hsync_pin.value()
         #vsync = my_cam.vsync_pin.value()
@@ -77,6 +75,10 @@ def main():
         #     data = my_cam.i2c_instance.reg_read(register[0])
         #     print(register[0], data)
         #     time.sleep(0.5)
+        
+        # data = pio.get_data(4)
+        # print(data)
+        
         time.sleep(2)
         led.on()
         time.sleep(2)
