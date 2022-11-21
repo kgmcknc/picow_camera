@@ -1,7 +1,55 @@
+import rp2
+from machine import Pin
+import time
 
 hm01b0_address = 0x24
 hm01b0_freq = 400000
 hm01b0_pix_clk_freq = 20_830_000
+
+@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_LEFT, )
+def hm01b0_get_frame():
+    # pins are d0,d1,d2,d3,d4,d5,d6,d7,pix_clk,hsync,vsync
+    wrap_target()
+    # wait for not in frame
+    #wait(0, pin, 3)
+    # wait for vsync going high for start of frame
+    #wait(1, pin, 3)
+    # set label for processing line
+    #label("process_line")
+    # wait for hsync high
+    wait(1, pin, 10)
+    # wait for clk high
+    wait(1, pin, 9)
+    # get data
+    in_(pins, 8)
+    # wait clk low
+    wait(0, pin, 9)
+    # continue on line if hsync high
+    #jmp(pin 2, "process_line")
+    wrap()
+
+class cam_pio_class:
+    base_pin = None
+    sm_freq = None
+    sm_id = None
+    sm_inst = None
+    def __init__(self, sm_id=None, freq=None, base_pin=None):
+        self.base_pin = base_pin
+        self.sm_freq = freq
+        self.sm_id = sm_id
+        self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_frame, freq=self.sm_freq, in_base=self.base_pin)
+
+    def start(self):
+        self.sm_inst.active(1)
+    
+    def stop(self):
+        self.sm_inst.active(0)
+
+    def get_data(self, num_bytes):
+        pix_data = bytearray()
+        for i in range(num_bytes):
+            pix_data.append(self.sm_inst.get() & 0xff)
+        return pix_data
 
 hm01b0_regs_init_324x244 = [
     (0x0103, 0x00),

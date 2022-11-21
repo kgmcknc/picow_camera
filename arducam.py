@@ -6,6 +6,7 @@ pwm_duty = int(65535/2)
 class arducam_class:
     i2c_instance = my_i2c.i2c_class()
     i2c_address = None
+    i2c_address_width = 8
     i2c_freq = None
     scl_pin = None
     sda_pin = None
@@ -16,14 +17,16 @@ class arducam_class:
     pix_clk_pwm = None
     pix_clk_freq = None
 
-    def __init__(self, i2c_address=None, i2c_freq=None, scl_pin=None, sda_pin=None):
+    def __init__(self, i2c_address=None, i2c_address_width=8, i2c_freq=None, scl_pin=None, sda_pin=None):
         self.i2c_address = i2c_address
+        self.i2c_address_width = i2c_address_width
         self.i2c_freq = i2c_freq
         self.scl_pin = scl_pin
         self.sda_pin = sda_pin
 
     def initiate_i2c(self):
         self.i2c_instance.i2c_address = self.i2c_address
+        self.i2c_instance.i2c_address_width = self.i2c_address_width
         self.i2c_instance.scl_pin = self.scl_pin
         self.i2c_instance.sda_pin = self.sda_pin
         self.i2c_instance.i2c_freq = self.i2c_freq
