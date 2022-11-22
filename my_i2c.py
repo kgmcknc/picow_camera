@@ -8,6 +8,7 @@ class i2c_class:
     sda_pin = None
     i2c_address = None
     i2c_address_width = None
+    led_state = 0
 
     def __init__(self, i2c_address=None, i2c_address_width=8, scl_pin=None, sda_pin=None, i2c_freq=None):
         self.scl_pin = scl_pin
@@ -50,7 +51,7 @@ class i2c_class:
     def list_reg_writes(self, reg_list):
         if(self.i2c_instance == None):
             return
-        for register in reg_list:
+        for register in reg_list:                
             self.reg_write(register[0], register[1])
             print(register[0], register[1])
-            time.sleep(0.2)
+            time.sleep(0.25)

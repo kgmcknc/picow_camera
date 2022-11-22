@@ -1,9 +1,12 @@
 import rp2
 from machine import Pin
 import time
+from array   import array
+import my_dma
+import math
 
 hm01b0_address = 0x24
-hm01b0_freq = 400000
+hm01b0_freq = 1000000
 hm01b0_pix_clk_freq = 20_830_000
 
 @rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_LEFT, out_shiftdir=rp2.PIO.SHIFT_RIGHT)
@@ -11,36 +14,39 @@ def hm01b0_get_frame():
     # vsync,hsync,pix_clk,d0
 
     irq(clear, 0)    # clear irq if it's somehow set...
-    set(y, 1)        # set initial line number to 1
-    mov(y, isr)      # write line number isr
-    push(noblock)           # push line number to rx_fifo
+    # set(y, 1)        # set initial line number to 1
+    # mov(y, isr)      # write line number isr
+    # push()    # push line number to rx_fifo
     
-    wait(0, pin, 0) # wait for vsync 0 (not processing frame)
-    wait(1, pin, 0) # wait for vsync being high to start frame
+    wait(0, pin, 10) # wait for vsync 0 (not processing frame)
+    wait(1, pin, 10) # wait for vsync being high to start frame
 
     label("process_frame")   # create lable for processing the frame
 
+    wait(1, pin, 9) # wait hsync high
     label("process_line")
-    wait(1, pin, 1) # wait hsync high
-    wait(1, pin, 2) # wait pix clk high
-    in_(pins, 4)    # get data from pins
-    wait(0, pin, 2) # wait pix clk low
+    wait(1, pin, 8) # wait pix clk high
+    #in_(pins, 1)    # get data from pins
+    set(x, 1)
+    in_(x, 1)
+    #push()
+    wait(0, pin, 8) # wait pix clk low
     jmp(pin, "process_line")
-    
+
     #line is done
-    nop()
-    nop()
-    nop()
-    nop()
+    # nop()
+    # nop()
+    # nop()
+    # nop()
 
-    push(noblock)      # push any leftover bits in isr
-    set(y, y+1) # increment line counter
-    mov(y, isr) # write line number isr
-    push(noblock)      # push line number to rx_fifo
+    push()      # push any leftover bits in isr
+    # set(y, y+1) # increment line counter
+    # mov(y, isr) # write line number isr
+    # push()      # push line number to rx_fifo
 
-    set(x,0)
     mov(osr, pins)
-    out(x, 1)
+    out(x, 9)
+    mov(x, osr)
 
     jmp(x, "process_frame")
 
@@ -90,19 +96,36 @@ def hm01b0_get_frame():
     
 class cam_pio_class:
     base_pin = None
+    jmp_pin = None
     sm_freq = None
     sm_id = None
     sm_inst = None
     processing_frame = 0
     frame_done = 0
+    dma_inst = None
+    image_array = None
+    x_res = None
+    y_res = None
 
     def __init__(self, sm_id=None, freq=None, base_pin=None, jmp_pin=None):
         self.base_pin = base_pin
         self.jmp_pin = jmp_pin
         self.sm_freq = freq
         self.sm_id = sm_id
+        self.processing_frame = 0
+        self.frame_done = 0
+        self.dma_inst = my_dma.my_dma_class()
         self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_frame, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
         rp2.PIO(0).irq(self.stop)
+
+    def set_frame_size(self, x_res, y_res):
+        test_array = array('I')
+        byte_size = self.dma_inst.BytesPerItem(test_array)
+        print(byte_size)
+        pixels = math.ceil((x_res/byte_size)/8) * y_res
+        self.image_array = array('I', [0] * pixels)
+        print(len(self.image_array))
+        self.dma_inst.configure_dma(self.image_array, self.sm_id)
 
     def start(self):
         # drain fifo if not empty
@@ -111,6 +134,7 @@ class cam_pio_class:
         self.processing_frame = 1
         print("pio active")
         self.sm_inst.active(1)
+        self.dma_inst.start_dma_transfer()
 
     def stop(self, value):
         print("Frame irq triggered!")
@@ -139,7 +163,6 @@ class cam_pio_class:
 
     def wait_frame_done(self):
         while(not self.frame_done):
-            print("waiting end")
             pass
         self.frame_done = 0
 

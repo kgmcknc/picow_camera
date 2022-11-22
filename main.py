@@ -9,9 +9,9 @@ def main():
     time.sleep(1)
     print("Starting picam")
     led.on()
-    time.sleep(5)
-    led.off()
-    time.sleep(5)
+    # time.sleep(5)
+    # led.off()
+    # time.sleep(5)
 
     print("creating arducam class")
     my_cam = arducam.arducam_class()
@@ -20,49 +20,38 @@ def main():
     my_cam.i2c_freq = hm01b0.hm01b0_freq
     my_cam.scl_pin = machine.Pin(5)
     my_cam.sda_pin = machine.Pin(4)
-    my_cam.vsync_pin = machine.Pin(18, machine.Pin.IN)
-    my_cam.hsync_pin = machine.Pin(19, machine.Pin.IN)
-    my_cam.pix_clk_pin = machine.Pin(20, machine.Pin.OUT)
-    my_cam.data_pin = machine.Pin(21, machine.Pin.IN)
+    my_cam.vsync_pin = machine.Pin(16, machine.Pin.IN)
+    my_cam.hsync_pin = machine.Pin(15, machine.Pin.IN)
+    my_cam.pix_clk_pin = machine.Pin(14, machine.Pin.OUT)
+    my_cam.data_pin = machine.Pin(6, machine.Pin.IN)
 
     my_cam.pix_clk_freq = hm01b0.hm01b0_pix_clk_freq
-    time.sleep(1)
 
     print("initializing camera i2c")
     my_cam.initiate_i2c()
 
     time.sleep(1)
 
-    list = my_cam.i2c_instance.i2c_instance.scan()
-    print(list)
-
-    time.sleep(1)
-
     print("initializing camera pins")
     my_cam.initialize_pins()
-
-    time.sleep(1)
 
     print("configuring camera over i2c")
     my_cam.i2c_instance.list_reg_writes(hm01b0.hm01b0_regs_init_324x244)
 
     print("starting pixel clock")
     my_cam.start_pix_clk()
-    time.sleep(1)
-
-    print("done")
-    time.sleep(1)
 
     print("creating pio class")
-    pio = hm01b0.cam_pio_class(0, 60000000, my_cam.vsync_pin, my_cam.hsync_pin)
+    pio = hm01b0.cam_pio_class(0, 120_000_000, my_cam.data_pin, my_cam.hsync_pin)
     time.sleep(1)
 
     print("starting pio for one frame")
-    data = pio.capture_frame()
-
+    pio.set_frame_size(324, 244)
+    pio.capture_frame()
+    print(pio.image_array)
     # print("getting frame data")
     # data = pio.get_frame_data()
-    print(data)
+    # print(data)
 
     while(1):
         #hsync = my_cam.hsync_pin.value()
@@ -83,6 +72,8 @@ def main():
         led.on()
         time.sleep(2)
         led.off()
+        pio.capture_frame()
+        print(pio.image_array)
 
 if __name__ == "__main__":
    main()
