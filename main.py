@@ -47,8 +47,11 @@ def main():
 
     print("starting pio for one frame")
     pio.set_frame_size(324, 244)
-    pio.capture_frame()
+
+    #pio.capture_frame()
+    pio.get_frame()
     print(pio.image_array)
+    
     # print("getting frame data")
     # data = pio.get_frame_data()
     # print(data)
@@ -72,7 +75,7 @@ def main():
         led.on()
         time.sleep(2)
         led.off()
-        pio.capture_frame()
+        pio.get_frame()
         print(pio.image_array)
 
 if __name__ == "__main__":
