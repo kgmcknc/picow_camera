@@ -75,8 +75,8 @@ def main():
         led.on()
         time.sleep(2)
         led.off()
-        pio.get_frame()
-        print(pio.image_array)
+        # pio.get_frame()
+        # print(pio.image_array)
 
 if __name__ == "__main__":
    main()

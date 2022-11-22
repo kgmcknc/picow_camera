@@ -9,15 +9,14 @@ hm01b0_address = 0x24
 hm01b0_freq = 400000
 hm01b0_pix_clk_freq = 20_830_000
 
-
 @rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_LEFT, out_shiftdir=rp2.PIO.SHIFT_RIGHT)
 def hm01b0_run():
     wrap_target()
     wait(1, pin, 9)
     wait(1, pin, 8)
-    #set(x, 1)
-    #in_(x, 1)
-    in_(pins, 1)
+    set(x, 1)
+    in_(x, 1)  # ADD SIDESET HERE AND DEBUG WITH SCOPE!
+    # in_(pins, 1)
     wait(0, pin, 8)
     wrap()
 
@@ -134,10 +133,8 @@ class cam_pio_class:
     def set_frame_size(self, x_res, y_res):
         test_array = array('I')
         byte_size = self.dma_inst.BytesPerItem(test_array)
-        print(byte_size)
         pixels = math.ceil((x_res/byte_size)/8) * y_res
         self.image_array = array('I', [0] * pixels)
-        print(len(self.image_array))
         self.dma_inst.configure_dma(self.image_array, self.sm_id)
 
     def get_frame(self):
