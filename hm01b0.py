@@ -7,18 +7,29 @@ import math
 
 hm01b0_address = 0x24
 hm01b0_freq = 400000
-hm01b0_pix_clk_freq = 20_830_000
+hm01b0_pix_clk_freq = 5_830_000
 
-@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_LEFT, out_shiftdir=rp2.PIO.SHIFT_RIGHT)
+@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_LEFT, out_shiftdir=rp2.PIO.SHIFT_RIGHT, sideset_init=rp2.PIO.OUT_LOW)
 def hm01b0_run():
-    wrap_target()
+    set(x, 1)
+    label("top")
     wait(1, pin, 9)
     wait(1, pin, 8)
-    set(x, 1)
-    in_(x, 1)  # ADD SIDESET HERE AND DEBUG WITH SCOPE!
-    # in_(pins, 1)
+    jmp(not_x,"x0") .side(0)
+    jmp("x1") .side(1)
+    
+    label("x1")
+    set(x, 0)
+    in_(x, 1)
     wait(0, pin, 8)
-    wrap()
+    jmp("top")
+
+    label("x0")
+    set(x, 1)
+    in_(x, 1)
+    wait(0, pin, 8)
+    jmp("top")
+    # in_(pins, 1)
 
 @rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_LEFT, out_shiftdir=rp2.PIO.SHIFT_RIGHT)
 def hm01b0_get_frame():
@@ -118,7 +129,7 @@ class cam_pio_class:
     x_res = None
     y_res = None
 
-    def __init__(self, sm_id=None, freq=None, base_pin=None, jmp_pin=None):
+    def __init__(self, sm_id=None, freq=None, base_pin=None, jmp_pin=None, side_pin=None):
         self.base_pin = base_pin
         self.jmp_pin = jmp_pin
         self.sm_freq = freq
@@ -126,8 +137,8 @@ class cam_pio_class:
         self.processing_frame = 0
         self.frame_done = 0
         self.dma_inst = my_dma.my_dma_class()
-        self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_run, freq=self.sm_freq, in_base=self.base_pin)
-        # self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_frame, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
+        self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_run, freq=self.sm_freq, in_base=self.base_pin, sideset_base=side_pin)
+        #self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_frame, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
         rp2.PIO(0).irq(self.stop)
 
     def set_frame_size(self, x_res, y_res):
@@ -140,11 +151,11 @@ class cam_pio_class:
     def get_frame(self):
         while(self.sm_inst.rx_fifo() > 0):
             self.sm_inst.get()
-        self.dma_inst.start_dma_transfer()
         while(self.jmp_pin.value() == 0):
             pass
         while(self.jmp_pin.value() == 1):
             pass
+        self.dma_inst.start_dma_transfer()
         self.sm_inst.active(1)
         while(self.jmp_pin.value() == 0):
             pass
