@@ -148,7 +148,8 @@ class cam_pio_class:
         self.image_array = array('I', [0] * pixels)
         self.dma_inst.configure_dma(self.image_array, self.sm_id)
 
-    def get_frame(self):
+    def get_frame(self, x_res, y_res):
+        self.set_frame_size(x_res, y_res)
         while(self.sm_inst.rx_fifo() > 0):
             self.sm_inst.get()
         while(self.jmp_pin.value() == 0):

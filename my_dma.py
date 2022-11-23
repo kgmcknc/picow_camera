@@ -9,20 +9,25 @@ class my_dma_class:
     def __init__(self):
         self.start_mem_addr = None
         self.start_mem_data = None
+        self.array_mem_addr = None
+        self.dma_wr_addr = None
+        self.dma_rd_addr = None
+        self.dma_wr_cnt_addr = None
 
     def configure_dma(self, dst, smNumber, dmaChannel=0):
-        DMA_BASE            = 0x50000000 + (dmaChannel * 0x40)
-        DMA_RD_ADR          = DMA_BASE + 0x00
-        DMA_WR_ADR          = DMA_BASE + 0x04
-        DMA_WR_CNT          = DMA_BASE + 0x08
-        self.start_mem_addr = DMA_BASE + 0x0C
+        DMA_BASE             = 0x50000000 + (dmaChannel * 0x40)
+        self.dma_rd_addr     = DMA_BASE + 0x00
+        self.dma_wr_addr     = DMA_BASE + 0x04
+        self.dma_wr_cnt_addr = DMA_BASE + 0x08
+        self.start_mem_addr  = DMA_BASE + 0x0C
+        self.array_mem_addr  = AddressOfArray(dst)      # Where to write to
         
-        PIOx_BASE         = 0x50200000 + ((smNumber >> 2) << 20)
-        PIOx_RXFx         = PIOx_BASE + 0x20 + ((smNumber & 3) * 4)
+        PIOx_BASE            = 0x50200000 + ((smNumber >> 2) << 20)
+        PIOx_RXFx            = PIOx_BASE + 0x20 + ((smNumber & 3) * 4)
         
-        mem32[DMA_RD_ADR] = PIOx_RXFx                # Where to copy from
-        mem32[DMA_WR_ADR] = AddressOfArray(dst)      # Where to write to
-        mem32[DMA_WR_CNT] = ItemsInArray(dst)        # Number of items to transfer
+        mem32[self.dma_rd_addr]     = PIOx_RXFx                # Where to copy from
+        mem32[self.dma_wr_addr]     = self.array_mem_addr
+        mem32[self.dma_wr_cnt_addr] = ItemsInArray(dst)        # Number of items to transfer
 
         IRQ_QUIET         = 1                        # No interrupt
         TREQ_SEL          = 0x04   # <-- Get         # Wait for PIO_RXF
