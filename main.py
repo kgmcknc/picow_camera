@@ -24,7 +24,6 @@ def main():
     my_cam.hsync_pin = machine.Pin(15, machine.Pin.IN)
     my_cam.pix_clk_pin = machine.Pin(14, machine.Pin.OUT)
     my_cam.data_pin = machine.Pin(6, machine.Pin.IN)
-    side_pin = machine.Pin(17, machine.Pin.OUT)
 
     my_cam.pix_clk_freq = hm01b0.hm01b0_pix_clk_freq
 
@@ -43,7 +42,7 @@ def main():
     my_cam.start_pix_clk()
 
     print("creating pio class")
-    pio = hm01b0.cam_pio_class(0, 120_000_000, my_cam.data_pin, my_cam.vsync_pin, side_pin)
+    pio = hm01b0.cam_pio_class(0, 120_000_000, my_cam.data_pin, my_cam.vsync_pin)
     time.sleep(1)
 
     print("starting pio for one frame")
