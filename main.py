@@ -82,7 +82,10 @@ def main():
         # print(data)
         
         pio.get_frame(width, height, bits, 125_000_000, data_pin, vsync_pin)
-        print(pio.image_array)
+        print("frame_start")
+        for i in range(len(pio.image_array)):
+            print(pio.image_array[i])
+        print("frame_done")
         #pio.get_pixel_line_count(width, height, 125_000_000, my_cam.data_pin, my_cam.hsync_pin, side_pin)
         #pio.get_total_count(width, height, 125_000_000, my_cam.data_pin, my_cam.hsync_pin, side_pin)
 

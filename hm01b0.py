@@ -109,7 +109,7 @@ hm01b0_pix_clk_freq = 20_830_000
 @asm_pio(autopush=True, fifo_join=PIO.JOIN_RX, in_shiftdir=PIO.SHIFT_RIGHT, out_shiftdir=PIO.SHIFT_RIGHT, push_thresh=32)
 def hm01b0_run():
     wrap_target()
-    #wait(1, pin, 9)
+    wait(1, pin, 9)
     wait(1, pin, 8)
     in_(pins, 1)
     wait(0, pin, 8)
