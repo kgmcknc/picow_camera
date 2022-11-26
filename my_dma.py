@@ -1,7 +1,4 @@
-from array   import array
 from machine import mem32
-from rp2     import asm_pio, StateMachine
-from time    import sleep
 
 # code from https://forums.raspberrypi.com/viewtopic.php?t=320873
 

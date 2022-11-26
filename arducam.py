@@ -1,5 +1,5 @@
 import my_i2c
-import machine
+from machine import PWM
 
 pwm_duty = int(65535/2)
 
@@ -35,7 +35,7 @@ class arducam_class:
     def initialize_pins(self):
         if(self.pix_clk_pin == None):
             return
-        self.pix_clk_pwm = machine.PWM(self.pix_clk_pin)
+        self.pix_clk_pwm = PWM(self.pix_clk_pin)
 
     def start_pix_clk(self):
         self.pix_clk_pwm.freq(self.pix_clk_freq)

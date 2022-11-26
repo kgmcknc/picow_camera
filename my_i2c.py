@@ -1,4 +1,4 @@
-import machine
+from machine import I2C
 import time
 
 class i2c_class:
@@ -25,7 +25,7 @@ class i2c_class:
             return
         if(self.i2c_freq == None):
             return
-        self.i2c_instance = machine.I2C(0, scl=self.scl_pin, sda=self.sda_pin, freq=self.i2c_freq)
+        self.i2c_instance = I2C(0, scl=self.scl_pin, sda=self.sda_pin, freq=self.i2c_freq)
 
     def reg_write(self, reg, data):
         if(self.i2c_instance == None):
@@ -54,4 +54,4 @@ class i2c_class:
         for register in reg_list:                
             self.reg_write(register[0], register[1])
             print(register[0], register[1])
-            time.sleep(0.25)
+            time.sleep(0.35)
