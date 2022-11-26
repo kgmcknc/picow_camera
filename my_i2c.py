@@ -2,30 +2,24 @@ from machine import I2C
 import time
 
 class i2c_class:
-    i2c_instance = None
-    i2c_freq = None
-    scl_pin = None
-    sda_pin = None
-    i2c_address = None
-    i2c_address_width = None
-    led_state = 0
-
-    def __init__(self, i2c_address=None, i2c_address_width=8, scl_pin=None, sda_pin=None, i2c_freq=None):
-        self.scl_pin = scl_pin
-        self.sda_pin = sda_pin
+    def __init__(self, scl_pin=None, sda_pin=None, i2c_freq=None, i2c_address=None, i2c_address_width=None):
+        self.i2c_instance = None
         self.i2c_address = i2c_address
-        self.i2c_freq = i2c_freq
         self.i2c_address_width = i2c_address_width
-        self.initiate_i2c()
+        self.initiate_i2c(scl_pin, sda_pin, i2c_freq)
 
-    def initiate_i2c(self):
-        if(self.scl_pin == None):
+    def initiate_i2c(self, scl_pin=None, sda_pin=None, i2c_freq=None, i2c_address=None, i2c_address_width=None):
+        if(scl_pin == None):
             return
-        if(self.sda_pin == None):
+        if(sda_pin == None):
             return
-        if(self.i2c_freq == None):
+        if(i2c_freq == None):
             return
-        self.i2c_instance = I2C(0, scl=self.scl_pin, sda=self.sda_pin, freq=self.i2c_freq)
+        if(not(i2c_address == None)):
+            self.i2c_address = i2c_address
+        if(not(i2c_address_width == None)):
+            self.i2c_address_width = i2c_address_width
+        self.i2c_instance = I2C(0, scl=scl_pin, sda=sda_pin, freq=i2c_freq)
 
     def reg_write(self, reg, data):
         if(self.i2c_instance == None):

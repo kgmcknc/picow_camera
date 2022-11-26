@@ -1,4 +1,7 @@
-import rp2
+from micropython import const
+from rp2 import PIO
+from rp2 import StateMachine
+from rp2 import asm_pio
 from array import array
 import my_dma
 from math import ceil
@@ -7,242 +10,244 @@ hm01b0_address = 0x24
 hm01b0_freq = 400000
 hm01b0_pix_clk_freq = 20_830_000
 
-@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_RIGHT, out_shiftdir=rp2.PIO.SHIFT_RIGHT, push_thresh=32)
-def full_frame_toggle_test():
-    set(x, 31)
-    set(y, 1)
-    label("top")
-    wait(1, pin, 9)
-    wait(1, pin, 8)
-    jmp(x_dec,"x1")
-    jmp("x0")
+# @asm_pio(autopush=True, fifo_join=PIO.JOIN_RX, in_shiftdir=PIO.SHIFT_RIGHT, out_shiftdir=PIO.SHIFT_RIGHT, push_thresh=32)
+# def full_frame_toggle_test():
+#     set(x, 31)
+#     set(y, 1)
+#     label("top")
+#     wait(1, pin, 9)
+#     wait(1, pin, 8)
+#     jmp(x_dec,"x1")
+#     jmp("x0")
     
-    label("x1")
-    #set(x, 0)
-    set(y, 1)
-    in_(y, 1)
-    # in_(y, 1)
-    wait(0, pin, 8)
-    jmp("top")
+#     label("x1")
+#     #set(x, 0)
+#     set(y, 1)
+#     in_(y, 1)
+#     # in_(y, 1)
+#     wait(0, pin, 8)
+#     jmp("top")
 
-    label("x0")
-    set(x, 31)
-    in_(null, 1)
-    # in_(y, 1)
-    wait(0, pin, 8)
-    jmp("top")
-    # in_(pins, 1)
+#     label("x0")
+#     set(x, 31)
+#     in_(null, 1)
+#     # in_(y, 1)
+#     wait(0, pin, 8)
+#     jmp("top")
+#     # in_(pins, 1)
 
-@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_RIGHT, out_shiftdir=rp2.PIO.SHIFT_RIGHT, push_thresh=32)
-def hm01b0_get_line_count():
-    set(y,0)
+# @asm_pio(autopush=True, fifo_join=PIO.JOIN_RX, in_shiftdir=PIO.SHIFT_RIGHT, out_shiftdir=PIO.SHIFT_RIGHT, push_thresh=32)
+# def hm01b0_get_line_count():
+#     set(y,0)
     
-    label("top")
-    wait(1, pin, 10)
-    wait(1, pin, 9)
-    mov(y, invert(y))
-    jmp(y_dec, "y_sub")
-    label("y_sub")
-    mov(y, invert(y))
-    in_(y, 32)
-    wait(0, pin, 9) .delay(30)
-    jmp("top")
+#     label("top")
+#     wait(1, pin, 10)
+#     wait(1, pin, 9)
+#     mov(y, invert(y))
+#     jmp(y_dec, "y_sub")
+#     label("y_sub")
+#     mov(y, invert(y))
+#     in_(y, 32)
+#     wait(0, pin, 9) .delay(30)
+#     jmp("top")
 
-@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_RIGHT, out_shiftdir=rp2.PIO.SHIFT_RIGHT, push_thresh=32)
-def hm01b0_get_pixel_count():
-    set(x, 0)
+# @asm_pio(autopush=True, fifo_join=PIO.JOIN_RX, in_shiftdir=PIO.SHIFT_RIGHT, out_shiftdir=PIO.SHIFT_RIGHT, push_thresh=32)
+# def hm01b0_get_pixel_count():
+#     set(x, 0)
     
-    label("top")
-    wait(1, pin, 9)
-    wait(1, pin, 8)
-    mov(x, invert(x))
-    jmp(x_dec, "x_sub")
-    label("x_sub")
-    mov(x, invert(x))
-    wait(0, pin, 8) .delay(10)
-    jmp(pin, "top")
-    in_(x,32)
-    set(x,0)
-    jmp("top")
+#     label("top")
+#     wait(1, pin, 9)
+#     wait(1, pin, 8)
+#     mov(x, invert(x))
+#     jmp(x_dec, "x_sub")
+#     label("x_sub")
+#     mov(x, invert(x))
+#     wait(0, pin, 8) .delay(10)
+#     jmp(pin, "top")
+#     in_(x,32)
+#     set(x,0)
+#     jmp("top")
 
-@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_RIGHT, out_shiftdir=rp2.PIO.SHIFT_RIGHT, push_thresh=32, sideset_init=rp2.PIO.OUT_LOW)
-def hm01b0_get_pixel_line_count():
-    set(x, 0)
-    set(y, 0)
+# @asm_pio(autopush=True, fifo_join=PIO.JOIN_RX, in_shiftdir=PIO.SHIFT_RIGHT, out_shiftdir=PIO.SHIFT_RIGHT, push_thresh=32, sideset_init=PIO.OUT_LOW)
+# def hm01b0_get_pixel_line_count():
+#     set(x, 0)
+#     set(y, 0)
     
-    label("top")
-    wait(1, pin, 9)
-    wait(1, pin, 8) .side(1)
-    mov(x, invert(x))
-    jmp(x_dec, "x_sub")
-    label("x_sub")
-    mov(x, invert(x))
-    wait(0, pin, 8) .delay(4)
-    jmp(pin, "top") .side(0)
-    in_(x,32)
-    set(x,0)
-    mov(y, invert(y))
-    jmp(y_dec, "y_sub")
-    label("y_sub")
-    mov(y, invert(y))
-    in_(y, 32)
-    jmp("top")
+#     label("top")
+#     wait(1, pin, 9)
+#     wait(1, pin, 8) .side(1)
+#     mov(x, invert(x))
+#     jmp(x_dec, "x_sub")
+#     label("x_sub")
+#     mov(x, invert(x))
+#     wait(0, pin, 8) .delay(4)
+#     jmp(pin, "top") .side(0)
+#     in_(x,32)
+#     set(x,0)
+#     mov(y, invert(y))
+#     jmp(y_dec, "y_sub")
+#     label("y_sub")
+#     mov(y, invert(y))
+#     in_(y, 32)
+#     jmp("top")
 
 
-@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_RIGHT, out_shiftdir=rp2.PIO.SHIFT_RIGHT, push_thresh=32)
-def hm01b0_get_total_count():
-    set(x, 0)
-    mov(x, invert(x))
+# @asm_pio(autopush=True, fifo_join=PIO.JOIN_RX, in_shiftdir=PIO.SHIFT_RIGHT, out_shiftdir=PIO.SHIFT_RIGHT, push_thresh=32)
+# def hm01b0_get_total_count():
+#     set(x, 0)
+#     mov(x, invert(x))
     
-    label("top")
-    #wait(1, pin, 9)
-    wait(1, pin, 8)
-    #wait(0, pin, 8)
-    jmp(x_dec, "top")
-    # label("x_sub")
-    # wait(0, pin, 8)
-    # jmp(pin, "top")
+#     label("top")
+#     #wait(1, pin, 9)
+#     wait(1, pin, 8)
+#     #wait(0, pin, 8)
+#     jmp(x_dec, "top")
+#     # label("x_sub")
+#     # wait(0, pin, 8)
+#     # jmp(pin, "top")
 
-@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_RIGHT, out_shiftdir=rp2.PIO.SHIFT_RIGHT, push_thresh=32)
+@asm_pio(autopush=True, fifo_join=PIO.JOIN_RX, in_shiftdir=PIO.SHIFT_RIGHT, out_shiftdir=PIO.SHIFT_RIGHT, push_thresh=32)
 def hm01b0_run():
     wrap_target()
     #wait(1, pin, 9)
     wait(1, pin, 8)
     in_(pins, 1)
-    #wait(0, pin, 8)
+    wait(0, pin, 8)
     wrap()
     
-@rp2.asm_pio(autopush=True, fifo_join=rp2.PIO.JOIN_RX, in_shiftdir=rp2.PIO.SHIFT_RIGHT, out_shiftdir=rp2.PIO.SHIFT_RIGHT, push_thresh=32)
-def hm01b0_get_frame():
-    # vsync,hsync,pix_clk,d0
+# @asm_pio(autopush=True, fifo_join=PIO.JOIN_RX, in_shiftdir=PIO.SHIFT_RIGHT, out_shiftdir=PIO.SHIFT_RIGHT, push_thresh=32)
+# def hm01b0_get_frame():
+#     # vsync,hsync,pix_clk,d0
 
-    irq(clear, 0)    # clear irq if it's somehow set...
-    # set(y, 1)        # set initial line number to 1
-    # mov(y, isr)      # write line number isr
-    # push()    # push line number to rx_fifo
+#     irq(clear, 0)    # clear irq if it's somehow set...
+#     # set(y, 1)        # set initial line number to 1
+#     # mov(y, isr)      # write line number isr
+#     # push()    # push line number to rx_fifo
     
-    wait(0, pin, 10) # wait for vsync 0 (not processing frame)
-    wait(1, pin, 10) # wait for vsync being high to start frame
+#     wait(0, pin, 10) # wait for vsync 0 (not processing frame)
+#     wait(1, pin, 10) # wait for vsync being high to start frame
 
-    label("process_frame")   # create lable for processing the frame
+#     label("process_frame")   # create lable for processing the frame
 
-    wait(1, pin, 9) # wait hsync high
-    label("process_line")
-    wait(1, pin, 8) # wait pix clk high
-    #in_(pins, 1)    # get data from pins
-    set(x, 1)
-    in_(x, 1)
-    #push()
-    wait(0, pin, 8) # wait pix clk low
-    jmp(pin, "process_line")
+#     wait(1, pin, 9) # wait hsync high
+#     label("process_line")
+#     wait(1, pin, 8) # wait pix clk high
+#     #in_(pins, 1)    # get data from pins
+#     set(x, 1)
+#     in_(x, 1)
+#     #push()
+#     wait(0, pin, 8) # wait pix clk low
+#     jmp(pin, "process_line")
 
-    #line is done
-    # nop()
-    # nop()
-    # nop()
-    # nop()
+#     #line is done
+#     # nop()
+#     # nop()
+#     # nop()
+#     # nop()
 
-    push()      # push any leftover bits in isr
-    # set(y, y+1) # increment line counter
-    # mov(y, isr) # write line number isr
-    # push()      # push line number to rx_fifo
+#     push()      # push any leftover bits in isr
+#     # set(y, y+1) # increment line counter
+#     # mov(y, isr) # write line number isr
+#     # push()      # push line number to rx_fifo
 
-    mov(osr, pins)
-    out(x, 9)
-    mov(x, osr)
+#     mov(osr, pins)
+#     out(x, 9)
+#     mov(x, osr)
 
-    jmp(x, "process_frame")
+#     jmp(x, "process_frame")
 
-    irq(0)                # set irq to go high in system
-    label("loop_forever") # create label to loop forever
-    nop()# .delay(20)     # nop and delay number of cycles
-    jmp("loop_forever")   # go to label to loop forever
+#     irq(0)                # set irq to go high in system
+#     label("loop_forever") # create label to loop forever
+#     nop()# .delay(20)     # nop and delay number of cycles
+#     jmp("loop_forever")   # go to label to loop forever
 
-    # irq(clear, 0)    # clear irq if it's somehow set...
-    # set(y, 1)        # set initial line number to 1
-    # mov(y, isr)      # write line number isr
-    # push()           # push line number to rx_fifo
+#     # irq(clear, 0)    # clear irq if it's somehow set...
+#     # set(y, 1)        # set initial line number to 1
+#     # mov(y, isr)      # write line number isr
+#     # push()           # push line number to rx_fifo
     
-    # wait(0, pin, 0) # wait for vsync 0 (not processing frame)
-    # wait(1, pin, 0) # wait for vsync being high to start frame
+#     # wait(0, pin, 0) # wait for vsync 0 (not processing frame)
+#     # wait(1, pin, 0) # wait for vsync being high to start frame
 
-    # label("process_frame")   # create lable for processing the frame
-    # jmp(1, "process_line")   # process line if hsync high
-    # jmp(0, "process_frame")  # if vsync still high, process frame
-    # irq(0)                # set irq to go high in system
-    # jmp("loop_forever")
-    # jmp("frame_done")        # else, vsync low, frame is done
+#     # label("process_frame")   # create lable for processing the frame
+#     # jmp(1, "process_line")   # process line if hsync high
+#     # jmp(0, "process_frame")  # if vsync still high, process frame
+#     # irq(0)                # set irq to go high in system
+#     # jmp("loop_forever")
+#     # jmp("frame_done")        # else, vsync low, frame is done
 
-    # label("process_line")    # create label for processing line of pixels
-    # jmp(2, "get_pixel")      # get pixel if pix clk high
-    # jmp(1, "process_line")   # continue on line if hsync high
-    # jmp("line_done")         # else, hsync low, line is done
+#     # label("process_line")    # create label for processing line of pixels
+#     # jmp(2, "get_pixel")      # get pixel if pix clk high
+#     # jmp(1, "process_line")   # continue on line if hsync high
+#     # jmp("line_done")         # else, hsync low, line is done
 
-    # label("get_pixel")
-    # in_(pins, 4)             # get data from pins
-    # wait(0, pin, 2)          # wait pix clk low
-    # jmp("process_line")      # go back to check line
+#     # label("get_pixel")
+#     # in_(pins, 4)             # get data from pins
+#     # wait(0, pin, 2)          # wait pix clk low
+#     # jmp("process_line")      # go back to check line
 
-    # # line is done
-    # label("line_done")
-    # #push()      # push any leftover bits in isr
-    # #set(y, y+1) # increment line counter
-    # #mov(y, isr) # write line number isr
-    # #push()      # push line number to rx_fifo
-    # jmp("process_frame")
+#     # # line is done
+#     # label("line_done")
+#     # #push()      # push any leftover bits in isr
+#     # #set(y, y+1) # increment line counter
+#     # #mov(y, isr) # write line number isr
+#     # #push()      # push line number to rx_fifo
+#     # jmp("process_frame")
     
-    # label("frame_done")   # label we go to when frame is done
-    # irq(0)                # set irq to go high in system
-    # label("loop_forever") # create label to loop forever
-    # nop()# .delay(20)     # nop and delay number of cycles
-    # jmp("loop_forever")   # go to label to loop forever
+#     # label("frame_done")   # label we go to when frame is done
+#     # irq(0)                # set irq to go high in system
+#     # label("loop_forever") # create label to loop forever
+#     # nop()# .delay(20)     # nop and delay number of cycles
+#     # jmp("loop_forever")   # go to label to loop forever
     
 class cam_pio_class:
     vsync_pin = None
-    hsync_pin = None
+    # hsync_pin = None
     base_pin = None
-    jmp_pin = None
+    # jmp_pin = None
     sm_freq = None
     sm_id = None
     sm_inst = None
-    processing_frame = 0
-    frame_done = 0
+    # processing_frame = 0
+    # frame_done = 0
     dma_inst = None
     image_array = None
     x_res = None
     y_res = None
 
-    def __init__(self, vsync_pin = None, hsync_pin = None, sm_id=None, freq=None, base_pin=None, jmp_pin=None):
+    #                         hsync_pin = None,                     jmp_pin=None
+    def __init__(self, vsync_pin = None, sm_id=None, freq=None, base_pin=None):
         self.vsync_pin = vsync_pin
-        self.hsync_pin = hsync_pin
+        # self.hsync_pin = hsync_pin
         self.base_pin = base_pin
-        self.jmp_pin = jmp_pin
+        # self.jmp_pin = jmp_pin
         self.sm_freq = freq
         self.sm_id = sm_id
-        self.processing_frame = 0
-        self.frame_done = 0
+        # self.processing_frame = 0
+        # self.frame_done = 0
         self.dma_inst = my_dma.my_dma_class()
-        rp2.PIO(0).irq(self.stop)
+        # PIO(0).irq(self.stop)
 
     def set_frame_size(self, x_res, y_res, bpp):
         test_array = array('I')
         byte_size = self.dma_inst.BytesPerItem(test_array)
         bit_size = byte_size * 8
         elements = ceil((x_res*y_res*bpp)/bit_size)
-        self.image_array = array('I', [0] * elements)
-        self.dma_inst.configure_dma(self.image_array, self.sm_id)
+        self.image_array = array('I', (0 for _ in range(elements)))
 
-    def get_frame(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None):
+    def get_frame(self, x_res, y_res, bits, freq=None, base_pin=None, jmp_pin=None):
         if(not(freq == None)):
             self.sm_freq = freq
         if(not(base_pin == None)):
             self.base_pin = base_pin
         if(not(jmp_pin == None)):
             self.jmp_pin = jmp_pin
-        self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_run, freq=self.sm_freq, in_base=self.base_pin)
-        #self.sm_inst = rp2.StateMachine(self.sm_id, full_frame_toggle_test, freq=self.sm_freq, in_base=self.base_pin)
-        #self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_frame, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
-        self.set_frame_size(x_res, y_res, 8)
+        self.sm_inst = StateMachine(self.sm_id, hm01b0_run, freq=self.sm_freq, in_base=self.base_pin)
+        #self.sm_inst = StateMachine(self.sm_id, full_frame_toggle_test, freq=self.sm_freq, in_base=self.base_pin)
+        #self.sm_inst = StateMachine(self.sm_id, hm01b0_get_frame, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
+        if(self.image_array == None):
+            self.set_frame_size(x_res, y_res, bits)
+        self.dma_inst.configure_dma(self.image_array, self.sm_id)
         while(self.sm_inst.rx_fifo() > 0):
             self.sm_inst.get()
         while(self.vsync_pin.value() == 0):
@@ -258,124 +263,124 @@ class cam_pio_class:
         self.sm_inst.active(0)
         self.sm_inst.exec("push()")
 
-    def get_line_count(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None):
-        if(not(freq == None)):
-            self.sm_freq = freq
-        if(not(base_pin == None)):
-            self.base_pin = base_pin
-        if(not(jmp_pin == None)):
-            self.jmp_pin = jmp_pin
-        self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_line_count, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
-        self.set_frame_size(x_res, y_res)
-        while(self.sm_inst.rx_fifo() > 0):
-            self.sm_inst.get()
-        while(self.vsync_pin.value() == 0):
-            pass
-        while(self.vsync_pin.value() == 1):
-            pass
-        self.sm_inst.active(1)
-        while(self.vsync_pin.value() == 0):
-            pass
-        while(self.vsync_pin.value() == 1):
-            while(self.sm_inst.rx_fifo() > 0):
-                line_count = self.sm_inst.get()
-                print(line_count)
-        self.sm_inst.active(0)
+    # def get_line_count(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None):
+    #     if(not(freq == None)):
+    #         self.sm_freq = freq
+    #     if(not(base_pin == None)):
+    #         self.base_pin = base_pin
+    #     if(not(jmp_pin == None)):
+    #         self.jmp_pin = jmp_pin
+    #     self.sm_inst = StateMachine(self.sm_id, hm01b0_get_line_count, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
+    #     self.set_frame_size(x_res, y_res)
+    #     while(self.sm_inst.rx_fifo() > 0):
+    #         self.sm_inst.get()
+    #     while(self.vsync_pin.value() == 0):
+    #         pass
+    #     while(self.vsync_pin.value() == 1):
+    #         pass
+    #     self.sm_inst.active(1)
+    #     while(self.vsync_pin.value() == 0):
+    #         pass
+    #     while(self.vsync_pin.value() == 1):
+    #         while(self.sm_inst.rx_fifo() > 0):
+    #             line_count = self.sm_inst.get()
+    #             print(line_count)
+    #     self.sm_inst.active(0)
 
-    def get_pixel_count(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None):
-        if(not(freq == None)):
-            self.sm_freq = freq
-        if(not(base_pin == None)):
-            self.base_pin = base_pin
-        if(not(jmp_pin == None)):
-            self.jmp_pin = jmp_pin
-        self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_pixel_count, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
-        self.set_frame_size(x_res, y_res)
-        while(self.sm_inst.rx_fifo() > 0):
-            self.sm_inst.get()
-        while(self.vsync_pin.value() == 0):
-            pass
-        while(self.vsync_pin.value() == 1):
-            pass
-        self.sm_inst.active(1)
-        while(self.vsync_pin.value() == 0):
-            pass
-        while(self.vsync_pin.value() == 1):
-            while(self.sm_inst.rx_fifo() > 0):
-                pixel_count = self.sm_inst.get()
-                print(pixel_count)
-        self.sm_inst.active(0)
+    # def get_pixel_count(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None):
+    #     if(not(freq == None)):
+    #         self.sm_freq = freq
+    #     if(not(base_pin == None)):
+    #         self.base_pin = base_pin
+    #     if(not(jmp_pin == None)):
+    #         self.jmp_pin = jmp_pin
+    #     self.sm_inst = StateMachine(self.sm_id, hm01b0_get_pixel_count, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin)
+    #     self.set_frame_size(x_res, y_res)
+    #     while(self.sm_inst.rx_fifo() > 0):
+    #         self.sm_inst.get()
+    #     while(self.vsync_pin.value() == 0):
+    #         pass
+    #     while(self.vsync_pin.value() == 1):
+    #         pass
+    #     self.sm_inst.active(1)
+    #     while(self.vsync_pin.value() == 0):
+    #         pass
+    #     while(self.vsync_pin.value() == 1):
+    #         while(self.sm_inst.rx_fifo() > 0):
+    #             pixel_count = self.sm_inst.get()
+    #             print(pixel_count)
+    #     self.sm_inst.active(0)
 
-    def get_pixel_line_count(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None, side_pin=None):
-        if(not(freq == None)):
-            self.sm_freq = freq
-        if(not(base_pin == None)):
-            self.base_pin = base_pin
-        if(not(jmp_pin == None)):
-            self.jmp_pin = jmp_pin
-        self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_pixel_line_count, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin, sideset_base=side_pin)
-        self.set_frame_size(x_res, y_res)
-        while(self.sm_inst.rx_fifo() > 0):
-            self.sm_inst.get()
-        while(self.vsync_pin.value() == 0):
-            pass
-        while(self.vsync_pin.value() == 1):
-            pass
-        self.sm_inst.active(1)
-        while(self.vsync_pin.value() == 0):
-            pass
-        while(self.vsync_pin.value() == 1):
-            while(self.sm_inst.rx_fifo() > 0):
-                counts = self.sm_inst.get()
-                print(counts)
-        self.sm_inst.active(0)
+    # def get_pixel_line_count(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None, side_pin=None):
+    #     if(not(freq == None)):
+    #         self.sm_freq = freq
+    #     if(not(base_pin == None)):
+    #         self.base_pin = base_pin
+    #     if(not(jmp_pin == None)):
+    #         self.jmp_pin = jmp_pin
+    #     self.sm_inst = StateMachine(self.sm_id, hm01b0_get_pixel_line_count, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin, sideset_base=side_pin)
+    #     self.set_frame_size(x_res, y_res)
+    #     while(self.sm_inst.rx_fifo() > 0):
+    #         self.sm_inst.get()
+    #     while(self.vsync_pin.value() == 0):
+    #         pass
+    #     while(self.vsync_pin.value() == 1):
+    #         pass
+    #     self.sm_inst.active(1)
+    #     while(self.vsync_pin.value() == 0):
+    #         pass
+    #     while(self.vsync_pin.value() == 1):
+    #         while(self.sm_inst.rx_fifo() > 0):
+    #             counts = self.sm_inst.get()
+    #             print(counts)
+    #     self.sm_inst.active(0)
     
-    def get_total_count(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None, side_pin=None):
-        if(not(freq == None)):
-            self.sm_freq = freq
-        if(not(base_pin == None)):
-            self.base_pin = base_pin
-        if(not(jmp_pin == None)):
-            self.jmp_pin = jmp_pin
-        self.sm_inst = rp2.StateMachine(self.sm_id, hm01b0_get_total_count, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin, sideset_base=side_pin)
-        self.set_frame_size(x_res, y_res)
-        while(self.sm_inst.rx_fifo() > 0):
-            self.sm_inst.get()
-        while(self.vsync_pin.value() == 0):
-            pass
-        while(self.vsync_pin.value() == 1):
-            pass
-        self.sm_inst.active(1)
-        while(self.vsync_pin.value() == 0):
-            pass
-        while(self.vsync_pin.value() == 1):
-            pass
-        self.sm_inst.exec("in_(x, 32)")
-        self.sm_inst.active(0)
-        while(self.sm_inst.rx_fifo() > 0):
-                total_count = self.sm_inst.get()
-                print(total_count)
+    # def get_total_count(self, x_res, y_res, freq=None, base_pin=None, jmp_pin=None, side_pin=None):
+    #     if(not(freq == None)):
+    #         self.sm_freq = freq
+    #     if(not(base_pin == None)):
+    #         self.base_pin = base_pin
+    #     if(not(jmp_pin == None)):
+    #         self.jmp_pin = jmp_pin
+    #     self.sm_inst = StateMachine(self.sm_id, hm01b0_get_total_count, freq=self.sm_freq, in_base=self.base_pin, jmp_pin=self.jmp_pin, sideset_base=side_pin)
+    #     self.set_frame_size(x_res, y_res)
+    #     while(self.sm_inst.rx_fifo() > 0):
+    #         self.sm_inst.get()
+    #     while(self.vsync_pin.value() == 0):
+    #         pass
+    #     while(self.vsync_pin.value() == 1):
+    #         pass
+    #     self.sm_inst.active(1)
+    #     while(self.vsync_pin.value() == 0):
+    #         pass
+    #     while(self.vsync_pin.value() == 1):
+    #         pass
+    #     self.sm_inst.exec("in_(x, 32)")
+    #     self.sm_inst.active(0)
+    #     while(self.sm_inst.rx_fifo() > 0):
+    #             total_count = self.sm_inst.get()
+    #             print(total_count)
 
-    def start(self):
-        # drain fifo if not empty
-        while(self.sm_inst.rx_fifo() > 0):
-            self.sm_inst.get()
-        self.processing_frame = 1
-        print("pio active")
-        self.sm_inst.active(1)
-        self.dma_inst.start_dma_transfer()
+    # def start(self):
+    #     # drain fifo if not empty
+    #     while(self.sm_inst.rx_fifo() > 0):
+    #         self.sm_inst.get()
+    #     self.processing_frame = 1
+    #     print("pio active")
+    #     self.sm_inst.active(1)
+    #     self.dma_inst.start_dma_transfer()
 
-    def stop(self, value):
-        print("Frame irq triggered!")
-        self.frame_done = 1
-        self.processing_frame = 0
-        self.sm_inst.active(0)
+    # def stop(self, value):
+    #     print("Frame irq triggered!")
+    #     self.frame_done = 1
+    #     self.processing_frame = 0
+    #     self.sm_inst.active(0)
 
-    def capture_frame(self):
-        print("starting frame")
-        self.start()
-        print("waiting for frame done")
-        self.wait_frame_done()
+    # def capture_frame(self):
+    #     print("starting frame")
+    #     self.start()
+    #     print("waiting for frame done")
+    #     self.wait_frame_done()
         
         # while(self.processing_frame):
         #     pix_data = bytearray()
@@ -390,17 +395,16 @@ class cam_pio_class:
         # self.frame_done = 0
         # return pix_data
 
-    def wait_frame_done(self):
-        while(not self.frame_done):
-            pass
-        self.frame_done = 0
+    # def wait_frame_done(self):
+    #     while(not self.frame_done):
+    #         pass
+    #     self.frame_done = 0
 
-    def get_frame_data(self):
-        pix_data = bytearray()
-        while(self.sm_inst.rx_fifo() > 0):
-            pix_data.append(self.sm_inst.get() & 0xff)
-        return pix_data
-
+    # def get_frame_data(self):
+    #     pix_data = bytearray()
+    #     while(self.sm_inst.rx_fifo() > 0):
+    #         pix_data.append(self.sm_inst.get() & 0xff)
+    #     return pix_data
 
 hm01b0_regs_init_324x244 = [
     (0x0100, 0x00), # set to standby mode
