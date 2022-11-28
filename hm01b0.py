@@ -414,8 +414,8 @@ hm01b0_regs_init_324x244 = [
     (0x0104, 0x00), # group param hold...? idk what this is. maybe holds registers until all applied?
     (0x0340, 0x02), # v res top       #017A bad # 0232 good
     (0x0341, 0x32), # v res bottom
-    (0x0342, 0x1F), # h res top       #0177 bad # 0172
-    (0x0343, 0x72), # h res bottom
+    (0x0342, 0x0A), # h res top       #0177 bad # 0172
+    (0x0343, 0x50), # h res bottom
     (0x0350, 0x7F), # not defined in spec?
     (0x0383, 0x01), # x bining
     (0x0387, 0x01), # y bining

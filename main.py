@@ -6,6 +6,7 @@ import my_i2c
 width=324
 height=324
 bits = 8
+led_on = 0
 
 def main():
     led = Pin("LED", Pin.OUT)
@@ -13,6 +14,7 @@ def main():
     time.sleep(1)
     print("Starting picam")
     led.on()
+    led_on = 1
     # time.sleep(5)
     # led.off()
     # time.sleep(5)
@@ -53,7 +55,7 @@ def main():
     pio = hm01b0.cam_pio_class(vsync_pin, 0, 125_000_000, data_pin)
     time.sleep(1)
 
-    print("starting pio for one frame")
+    #print("starting pio for one frame")
     #pio.capture_frame()
     #pio.get_frame(324, 244)
     #print(bytes(pio.image_array))
@@ -64,7 +66,10 @@ def main():
 
     #pio.get_pixel_line_count(width, height, 120_000_000, my_cam.data_pin, my_cam.hsync_pin, side_pin)
     #pio.get_total_count(width, height, 120_000_000, my_cam.data_pin, my_cam.hsync_pin, side_pin)
-    time.sleep(2)
+    #time.sleep(2)
+    
+    led_on = 0
+    led.off()
 
     while(1):
         #hsync = my_cam.hsync_pin.value()
@@ -80,7 +85,6 @@ def main():
         
         # data = pio.get_data(4)
         # print(data)
-        
         pio.get_frame(width, height, bits, 125_000_000, data_pin, vsync_pin)
         print("frame_start")
         for i in range(len(pio.image_array)):
@@ -89,12 +93,14 @@ def main():
         #pio.get_pixel_line_count(width, height, 125_000_000, my_cam.data_pin, my_cam.hsync_pin, side_pin)
         #pio.get_total_count(width, height, 125_000_000, my_cam.data_pin, my_cam.hsync_pin, side_pin)
 
-        time.sleep(5)
+        if(led_on):
+            led.off()
+            led_on = 0
+        else:
+            led.on()
+            led_on = 1
         #pio.get_line_count(324,244, 120_000_000, data_pin, hsync_pin)
-        led.on()
-        time.sleep(5)
         #pio.get_pixel_count(324,244, 120_000_000, data_pin, hsync_pin)
-        led.off()
 
 if __name__ == "__main__":
    main()
