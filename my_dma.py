@@ -6,6 +6,7 @@ class my_dma_class:
     def __init__(self):
         self.start_mem_addr = None
         self.start_mem_data = None
+        self.image_array_addr = None
 
     def configure_dma(self, dst, smNumber, dmaChannel=0):
         DMA_BASE             = 0x50000000 + (dmaChannel * 0x40)
@@ -14,14 +15,14 @@ class my_dma_class:
         DMA_WR_CNTR_ADDR = DMA_BASE + 0x08
         self.start_mem_addr  = DMA_BASE + 0x0C
         DMA_ABORT = 	   DMA_BASE + 0x444
-        ARRAY_MEM_ADDR  = AddressOfArray(dst)      # Where to write to
+        self.image_array_addr  = AddressOfArray(dst)      # Where to write to
         
         PIOx_BASE            = 0x50200000 + ((smNumber >> 2) << 20)
         PIOx_RXFx            = PIOx_BASE + 0x20 + ((smNumber & 3) * 4)
         
         mem32[DMA_ABORT]       = 1
         mem32[DMA_RD_ADDR]     = PIOx_RXFx                # Where to copy from
-        mem32[DMA_WR_ADDR]     = ARRAY_MEM_ADDR
+        mem32[DMA_WR_ADDR]     = self.image_array_addr
         mem32[DMA_WR_CNTR_ADDR] = len(dst)        # Number of items to transfer
 
         IRQ_QUIET         = 1                        # No interrupt
@@ -31,7 +32,7 @@ class my_dma_class:
         RING_SIZE         = 0                        # No wrapping
         INCR_READ         = 0      # <-- Get         # Do not increment read address
         INCR_WRITE        = 1                        # Increment write address
-        DATA_SIZE         = self.BytesPerItem(dst) >> 1   # Data size - 0=8-bit, 1=16-bit, 2=32-bit
+        DATA_SIZE         = 2 #self.BytesPerItem(dst) >> 1   # Data size - 0=8-bit, 1=16-bit, 2=32-bit
         HIGH_PRIORITY     = 1                        # High priority
         ENABLE            = 1                        # Enabled
         

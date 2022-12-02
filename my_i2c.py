@@ -42,10 +42,11 @@ class i2c_class:
         data = self.i2c_instance.readfrom_mem(self.i2c_address, reg, num_bytes, addrsize=self.i2c_address_width)
         return data
 
-    def list_reg_writes(self, reg_list):
+    def list_reg_writes(self, reg_list, delay=0.0):
         if(self.i2c_instance == None):
             return
         for register in reg_list:                
             self.reg_write(register[0], register[1])
             print(register[0], register[1])
-            time.sleep(0.35)
+            if(delay > 0):
+                time.sleep(delay)

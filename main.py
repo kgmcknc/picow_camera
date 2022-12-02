@@ -21,9 +21,9 @@ def main():
 
     print("creating arducam class")
     my_cam = my_i2c.i2c_class()
-    my_cam.i2c_address = hm01b0.hm01b0_address
+    my_cam.i2c_address = hm01b0.hm01b0_i2c_address
     my_cam.i2c_address_width = 16
-    i2c_freq = hm01b0.hm01b0_freq
+    i2c_freq = hm01b0.hm01b0_i2c_freq
     scl_pin = Pin(5)
     sda_pin = Pin(4)
     vsync_pin = Pin(16, Pin.IN)
@@ -49,10 +49,10 @@ def main():
     # time.sleep(1)
     
     print("configuring camera over i2c")
-    my_cam.list_reg_writes(hm01b0.hm01b0_regs_init_324x244)
+    my_cam.list_reg_writes(hm01b0.hm01b0_regs_init_324x244, hm01b0.hm01b0_i2c_delay)
 
     print("creating pio class")
-    pio = hm01b0.cam_pio_class(vsync_pin, 0, 125_000_000, data_pin)
+    pio = hm01b0.cam_pio_class(vsync_pin, hsync_pin, 0, 125_000_000, data_pin)
     time.sleep(1)
 
     #print("starting pio for one frame")
@@ -90,6 +90,8 @@ def main():
         for i in range(len(pio.image_array)):
             print(pio.image_array[i])
         print("frame_done")
+        # print(pio.image_array)
+        # print(len(pio.image_array))
         #pio.get_pixel_line_count(width, height, 125_000_000, my_cam.data_pin, my_cam.hsync_pin, side_pin)
         #pio.get_total_count(width, height, 125_000_000, my_cam.data_pin, my_cam.hsync_pin, side_pin)
 
