@@ -451,7 +451,7 @@ class cam_pio_class:
             pix_data.append(self.sm_inst.get() & 0xff)
         return pix_data
 
-hm01b0_regs_init_324x244 = [
+hm01b0_regs_init_324x324_serial = [
     (0x0100, 0x00), # set to standby mode
     (0x0101, 0x01), # set to flip image vertical
     (0x0103, 0x00), # sw reset off

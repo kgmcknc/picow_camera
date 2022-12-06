@@ -49,7 +49,7 @@ def main():
     # time.sleep(1)
     
     print("configuring camera over i2c")
-    my_cam.list_reg_writes(hm01b0.hm01b0_regs_init_324x244, hm01b0.hm01b0_i2c_delay)
+    my_cam.list_reg_writes(hm01b0.hm01b0_regs_init_324x324_serial, hm01b0.hm01b0_i2c_delay)
 
     print("creating pio class")
     pio = hm01b0.cam_pio_class(vsync_pin, hsync_pin, 0, 125_000_000, data_pin)
