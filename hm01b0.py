@@ -542,3 +542,8 @@ hm01b0_regs_init_324x324_serial = [
     (0x3067, 0x00),
     (0x0100, 0x01) # set to streaming mode (enable)
 ]
+
+hm0360_regs_init_768_532_serial = [
+    (0x0100, 0x00), # set to standby mode
+    (0x0100, 0x01) # set to streaming mode (enable)
+]
